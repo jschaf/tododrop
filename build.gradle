@@ -1,0 +1,52 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'ch.raffael.pegdown-doclet:pegdown-doclet:1.2'
+    }
+}
+
+plugins {
+    id 'application'
+    id 'java'
+}
+
+apply plugin: 'ch.raffael.pegdown-doclet'
+
+group 'tododrop'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+mainClassName = 'tododrop.Main'
+
+repositories {
+    jcenter()
+}
+
+configurations {
+    markdownDoclet
+}
+
+
+dependencies {
+    compile (
+            'com.google.guava:guava:19.0',
+            'io.dropwizard:dropwizard-core:0.9.1',
+            'org.slf4j:slf4j-api:1.7.14'
+    )
+
+    testCompile 'junit:junit:4.12'
+}
+
+javadoc.options {
+    docletpath = configurations.markdownDoclet.files.asType(List)
+    doclet = "ch.raffael.doclets.pegdown.PegdownDoclet"
+    addStringOption("parse-timeout", "10")
+}
+
+
+run {
+    systemProperty "dropwizard.config", "build/resources/main/tododrop.yml"
+}
