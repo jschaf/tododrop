@@ -1,15 +1,24 @@
+import groovy.xml.MarkupBuilder
+import org.jooq.util.GenerationTool
+import org.yaml.snakeyaml.Yaml
+import javax.xml.bind.JAXB
+
 buildscript {
     repositories {
         jcenter()
     }
     dependencies {
         classpath 'ch.raffael.pegdown-doclet:pegdown-doclet:1.2'
+        classpath 'org.jooq:jooq-codegen:3.7.2'
+        classpath 'org.yaml:snakeyaml:1.16'
+        classpath 'org.postgresql:postgresql:9.4.1207'
     }
 }
 
 plugins {
     id 'application'
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
 apply plugin: 'ch.raffael.pegdown-doclet'
@@ -17,9 +26,20 @@ apply plugin: 'ch.raffael.pegdown-doclet'
 group 'tododrop'
 version '1.0-SNAPSHOT'
 
+// load config from YAML
+File configFile = new File('tododrop.yml')
+Yaml yaml = new Yaml();
+def config = yaml.load(configFile.newReader())
+def dbConfig = config.database;
+
+project.ext {
+    dropwizardVersion = '0.9.2'
+}
+
 sourceCompatibility = 1.8
 
-mainClassName = 'tododrop.Main'
+mainClassName = 'tododrop.App'
+
 
 repositories {
     jcenter()
@@ -36,30 +56,114 @@ dependencies {
 
     compile (
             'com.google.guava:guava:19.0',
-            'io.dropwizard:dropwizard-core:0.9.1',
+            "io.dropwizard:dropwizard-core:$dropwizardVersion",
+            "io.dropwizard:dropwizard-db:$dropwizardVersion",
+            'io.dropwizard.modules:dropwizard-flyway:0.9.0-1',
+            'javax.persistence:persistence-api:1.0.2',
+            'javax.validation:validation-api:1.1.0.Final',
+            "org.jooq:jooq:3.7.2",
             'org.slf4j:slf4j-api:1.7.14'
     )
     compile configurations.checker.dependencies
 
-    testCompile 'junit:junit:4.12'
+    testCompile (
+            'junit:junit:4.12',
+            "io.dropwizard:dropwizard-testing:$dropwizardVersion"
+    )
+
+
+    runtime 'org.postgresql:postgresql:9.4.1207'
 }
 
-allprojects {
-    tasks.withType(JavaCompile).all { JavaCompile compile ->
-        compile.options.debug = true
-        compile.options.compilerArgs = [
-                "-Xbootclasspath/p:${configurations.checker.asPath}",
-                '-processor', 'org.checkerframework.checker.nullness.NullnessChecker',
-                '-implicit:class',
-                '-AprintErrorStack'
-        ]
+// This complains about a missing library that's in the annotated JDK but not the normal one.
+// The code below should work but of course it fucking doesn't.
+//allprojects {
+//    tasks.withType(JavaCompile).all { JavaCompile compile ->
+//        compile.options.debug = true
+//        compile.options.compilerArgs = [
+//                "-Xbootclasspath/p:${configurations.checker.asPath}",
+//                '-processor', 'org.checkerframework.checker.nullness.NullnessChecker',
+//                '-implicit:class',
+//                '-AprintErrorStack'
+//        ]
+//    }
+//}
+
+
+task generateJooqCode {
+//    description = 'Generate Java API for the database.'
+    doLast {
+        // https://github.com/jOOQ/jOOQ/tree/master/jOOQ-examples/jOOQ-codegen-gradle
+        def writer = new StringWriter()
+        def xml = new MarkupBuilder(writer)
+        xml.configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.7.0.xsd') {
+            jdbc() {
+                driver(dbConfig.driverClass)
+                url(dbConfig.url)
+                user(dbConfig.user)
+                password(dbConfig.password)
+            }
+            generator() {
+                database() {
+                    inputSchema(dbConfig.schema)
+                }
+
+                // Watch out for this caveat when using MarkupBuilder with "reserved names"
+                // - https://github.com/jOOQ/jOOQ/issues/4797
+                // - http://stackoverflow.com/a/11389034/521799
+                // - https://groups.google.com/forum/#!topic/jooq-user/wi4S9rRxk4A
+                generate([:]) {
+                    pojos false
+                    immutablePojos true
+                    daos false
+                    fluentSetters true
+                    validationAnnotations true
+                    jpaAnnotations true
+                    globalObjectReferences true
+                }
+                target() {
+                    packageName('tododrop.models')
+                    directory("src/generated/java")
+                }
+            }
+        }
+
+        // Run the code generator
+        GenerationTool.generate(
+                JAXB.unmarshal(new StringReader(writer.toString()),
+                        org.jooq.util.jaxb.Configuration.class)
+        )
     }
 }
+
+sourceSets {
+    main.java.srcDir 'src/generated/java'
+}
+
+compileJava.dependsOn generateJooqCode
 
 javadoc.options {
     docletpath = configurations.markdownDoclet.files.asType(List)
     doclet = "ch.raffael.doclets.pegdown.PegdownDoclet"
     addStringOption("parse-timeout", "10")
+}
+
+shadowJar {
+    mergeServiceFiles()
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
+
+// Don't run tests on stage, because integration tests will wipe
+// the database.
+task stage {
+    dependsOn shadowJar
 }
 
 run {

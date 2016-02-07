@@ -1,0 +1,17 @@
+template: Hello, %s!
+defaultName: Stranger
+
+
+database:
+  driverClass: org.postgresql.Driver
+  user: todo
+  password: password
+  url: jdbc:postgresql://localhost:5432/todo
+  schema: tododrop
+
+
+flyway:
+  locations:
+    - db/migration
+  schemas:
+    - tododrop

@@ -7,11 +7,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.flyway.FlywayBundle;
+import io.dropwizard.flyway.FlywayFactory;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -20,29 +25,48 @@ import javax.ws.rs.core.MediaType;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Main extends Application<Main.TodoDropConfiguration> {
+public class App extends Application<App.TodoConfig> {
 
 
     public static void main(String[] args) throws Exception {
-        new Main().run("server", System.getProperty("dropwizard.config"));
+        new App().run(args);
     }
 
     @Override
-    public void initialize(Bootstrap<TodoDropConfiguration> bootstrap) {
+    public void initialize(Bootstrap<TodoConfig> bootstrap) {
+        // https://github.com/dropwizard/dropwizard-flyway
+        bootstrap.addBundle(new FlywayBundle<TodoConfig>() {
+            @Override
+            public DataSourceFactory getDataSourceFactory(TodoConfig config) {
+                return config.getDataSourceFactory();
+            }
+
+            @Override
+            public FlywayFactory getFlywayFactory(TodoConfig configuration) {
+                return configuration.getFlywayFactory();
+            }
+        });
+
+
     }
 
-
     @Override
-    public void run(TodoDropConfiguration config, Environment env) {
+    public void run(TodoConfig config, Environment env) {
 
         JmxReporter.forRegistry(env.metrics()).build().start(); // Manually add JMX reporting (Dropwizard regression)
 
         env.jersey().register(new HelloWorldResource(config));
     }
 
-    public static class TodoDropConfiguration extends Configuration {
-        @JsonProperty private @NotEmpty String template;
-        @JsonProperty private @NotEmpty String defaultName;
+    public static class TodoConfig extends Configuration {
+        @JsonProperty
+        private
+        @NotEmpty
+        String template;
+        @JsonProperty
+        private
+        @NotEmpty
+        String defaultName;
 
         public String getDefaultName() {
             return defaultName;
@@ -50,6 +74,28 @@ public class Main extends Application<Main.TodoDropConfiguration> {
 
         public String getTemplate() {
             return template;
+        }
+
+        @Valid
+        @NotNull
+        @JsonProperty("database")
+        private DataSourceFactory database = new DataSourceFactory();
+
+        public DataSourceFactory getDataSourceFactory() {
+            return database;
+        }
+
+        public void setDataSourceFactory(DataSourceFactory dataSourceFactory) {
+            this.database = dataSourceFactory;
+        }
+
+        @Valid
+        @NotNull
+        @JsonProperty("flyway")
+        private FlywayFactory flywayFactory = new FlywayFactory();
+
+        public FlywayFactory getFlywayFactory() {
+            return flywayFactory;
         }
     }
 
@@ -60,7 +106,7 @@ public class Main extends Application<Main.TodoDropConfiguration> {
         private final String template;
         private final String defaultName;
 
-        public HelloWorldResource(TodoDropConfiguration config) {
+        public HelloWorldResource(TodoConfig config) {
             this.template = config.getTemplate();
             this.defaultName = config.getDefaultName();
         }
@@ -72,7 +118,6 @@ public class Main extends Application<Main.TodoDropConfiguration> {
             Thread.sleep(ThreadLocalRandom.current().nextInt(10, 500));
             return new Saying(counter.incrementAndGet(), value);
         }
-
     }
 
     public static class Saying {
