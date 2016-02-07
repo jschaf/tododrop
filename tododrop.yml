@@ -7,8 +7,8 @@ database:
   user: todo
   password: password
   url: jdbc:postgresql://localhost:5432/todo
-  schema: tododrop
 
+schema: tododrop
 
 flyway:
   locations:

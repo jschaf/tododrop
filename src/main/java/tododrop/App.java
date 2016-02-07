@@ -1,6 +1,8 @@
 package tododrop;
 
 
+import com.bendb.dropwizard.jooq.JooqBundle;
+import com.bendb.dropwizard.jooq.JooqFactory;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,6 +16,9 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jooq.DSLContext;
+import tododrop.models.tables.pojos.Todo;
+import static tododrop.models.Tables.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -21,7 +26,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,7 +36,11 @@ public class App extends Application<App.TodoConfig> {
 
 
     public static void main(String[] args) throws Exception {
-        new App().run(args);
+        if (args.length == 0) {
+            new App().run("server", System.getProperty("dropwizard.config"));
+        } else {
+            new App().run(args);
+        }
     }
 
     @Override
@@ -47,6 +58,19 @@ public class App extends Application<App.TodoConfig> {
             }
         });
 
+        // https://github.com/benjamin-bader/droptools/tree/master/dropwizard-jooq
+        bootstrap.addBundle(new JooqBundle<TodoConfig>() {
+            @Override
+            public DataSourceFactory getDataSourceFactory(TodoConfig configuration) {
+                return configuration.getDataSourceFactory();
+            }
+
+            @Override
+            public JooqFactory getJooqFactory(TodoConfig configuration) {
+                return configuration.getJooqFactory();
+            }
+        });
+
 
     }
 
@@ -56,6 +80,7 @@ public class App extends Application<App.TodoConfig> {
         JmxReporter.forRegistry(env.metrics()).build().start(); // Manually add JMX reporting (Dropwizard regression)
 
         env.jersey().register(new HelloWorldResource(config));
+        env.jersey().register(new TodoResource());
     }
 
     public static class TodoConfig extends Configuration {
@@ -74,6 +99,13 @@ public class App extends Application<App.TodoConfig> {
 
         public String getTemplate() {
             return template;
+        }
+
+        @JsonProperty
+        private @NotEmpty String schema;
+
+        public String getSchema() {
+            return schema;
         }
 
         @Valid
@@ -97,6 +129,16 @@ public class App extends Application<App.TodoConfig> {
         public FlywayFactory getFlywayFactory() {
             return flywayFactory;
         }
+
+
+
+        @JsonProperty("jooq")
+        private JooqFactory jooqFactory = new JooqFactory();
+
+        public JooqFactory getJooqFactory() {
+            return jooqFactory;
+        }
+
     }
 
     @Path("/hello-world")
@@ -117,6 +159,16 @@ public class App extends Application<App.TodoConfig> {
             final String value = String.format(template, name.or(defaultName));
             Thread.sleep(ThreadLocalRandom.current().nextInt(10, 500));
             return new Saying(counter.incrementAndGet(), value);
+        }
+    }
+
+    @Path("/todo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public static class TodoResource {
+        @Timed
+        @GET
+        public List<Todo> getAllTodos(@Context DSLContext db) {
+            return db.selectFrom(TODO).fetchInto(Todo.class);
         }
     }
 
