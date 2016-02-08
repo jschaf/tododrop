@@ -34,9 +34,7 @@ def config = yaml.load(configFile.newReader())
 def dbConfig = config.database;
 
 project.ext {
-    // Using old version until I can get an updated dropwizard-jooq.
-    // See compile dependencies below
-    dropwizardVersion = '0.8.5'
+    dropwizardVersion = '0.9.2'
 }
 
 sourceCompatibility = 1.8
@@ -46,7 +44,9 @@ mainClassName = 'tododrop.App'
 allprojects {
     repositories {
         jcenter()
-        maven { url "https://jitpack.io" }
+        maven {
+            url = 'https://oss.sonatype.org/content/repositories/snapshots'
+        }
     }
 }
 
@@ -60,21 +60,11 @@ dependencies {
     checker 'org.checkerframework:jdk8:1.9.11'
 
     compile (
-            // This doesn't work for some reason. Issue: https://github.com/jitpack/jitpack.io/issues/420
-            // 'com.github.benjamin-bader.droptools:dropwizard-jooq:master-SNAPSHOT',
-
-            // Using outdated until dropwizard-jooq 0.9.1 is pushed to sonatype.
-            // Tracking issue for sonatype: https://github.com/benjamin-bader/droptools/issues/20
-            'com.bendb.dropwizard:dropwizard-jooq:0.8.1-1',
+            'com.bendb.dropwizard:dropwizard-jooq:0.9.1-1-SNAPSHOT',
             'com.google.guava:guava:19.0',
             "io.dropwizard:dropwizard-core:$dropwizardVersion",
             "io.dropwizard:dropwizard-db:$dropwizardVersion",
-
-            // Latest vesion is 0.9.0-1, but that depends on 0.9.x of dropwizard.
-            // We don't want that because of dropwizard-jooq, which needs DatabaseConfiguration
-            // to use a DataSource instead of a PooledDataSource
-            'io.dropwizard.modules:dropwizard-flyway:0.8.0-3',
-
+            'io.dropwizard.modules:dropwizard-flyway:0.9.0-1',
             'javax.persistence:persistence-api:1.0.2',
             'javax.validation:validation-api:1.1.0.Final',
             "org.jooq:jooq:3.7.2",

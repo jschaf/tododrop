@@ -48,9 +48,7 @@ public class TodoResource {
         todoRecord.setUrl("http://localhost:8080/" + todoRecord.getId());
         todoRecord.store();
 
-        return db.selectFrom(TODO)
-                .where(TODO.ID.eq(todoRecord.getId()))
-                .fetchOneInto(Todo.class);
+        return todoRecord.into(Todo.class);
     }
 
     @Timed
