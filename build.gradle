@@ -129,11 +129,11 @@ task generateJooqCode {
                 // - http://stackoverflow.com/a/11389034/521799
                 // - https://groups.google.com/forum/#!topic/jooq-user/wi4S9rRxk4A
                 generate([:]) {
-                    pojos false
-                    immutablePojos true
+                    pojos true
+                    immutablePojos false
                     daos false
                     fluentSetters true
-                    validationAnnotations true
+                    validationAnnotations false
                     jpaAnnotations true
                     globalObjectReferences true
                 }
