@@ -37,7 +37,7 @@ project.ext {
     dropwizardVersion = '0.9.2'
 }
 
-sourceCompatibility = 1.8
+project.sourceCompatibility = 1.8
 
 mainClassName = 'tododrop.App'
 
@@ -61,15 +61,16 @@ dependencies {
 
     compile (
             'com.bendb.dropwizard:dropwizard-jooq:0.9.1-1-SNAPSHOT',
-            'com.google.inject:guice:4.0',
             'com.google.guava:guava:19.0',
             "io.dropwizard:dropwizard-core:$dropwizardVersion",
             "io.dropwizard:dropwizard-db:$dropwizardVersion",
+            "io.dropwizard:dropwizard-testing:$dropwizardVersion",
             'io.dropwizard.modules:dropwizard-flyway:0.9.0-1',
             'javax.persistence:persistence-api:1.0.2',
             'javax.validation:validation-api:1.1.0.Final',
             "org.jooq:jooq:3.7.2",
-            'org.slf4j:slf4j-api:1.7.14'
+            'org.slf4j:slf4j-api:1.7.14',
+            'ru.vyarus:dropwizard-guicey:3.2.0'
     )
     compile configurations.checker.dependencies
 

@@ -1,104 +1,65 @@
 package tododrop;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.base.Optional;
 import io.dropwizard.jersey.PATCH;
-import org.jooq.DSLContext;
 import tododrop.models.tables.pojos.Todo;
-import tododrop.models.tables.records.TodoRecord;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
 import java.util.List;
-
-import static tododrop.models.Tables.TODO;
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
-public class TodoResource {
+public final class TodoResource {
+
+    private final TodoStore todoStore;
+
+    @Inject
+    public TodoResource(TodoStore todoStore) {
+        this.todoStore = todoStore;
+    }
 
     @Timed
     @GET
-    public List<Todo> getAllTodos(@Context DSLContext db) {
-        return db.selectFrom(TODO).fetchInto(Todo.class);
+    public List<Todo> getAllTodos() {
+        return todoStore.getAll();
     }
 
     @Timed
     @POST
-    public Todo addTodo(Todo todo, @Context DSLContext db) {
-        final TodoRecord todoRecord = db.newRecord(TODO, todo);
-
-        // id is determined by database, not user
-        todoRecord.changed(TODO.ID, false);
-
-        // url is determined based on id
-        todoRecord.setUrl(null);
-
-        if (todoRecord.getCompleted() == null) {
-            todoRecord.setCompleted(false);
-        }
-
-        todoRecord.store();
-
-        // build uri
-        // Doesn't have host
-//        final URI uri = UriBuilder.fromResource(TodoResource.class).build(todoRecord.getId());
-        todoRecord.setUrl("http://localhost:8080/" + todoRecord.getId());
-        todoRecord.store();
-
-        return todoRecord.into(Todo.class);
+    public Todo addTodo(Todo todo) {
+        return todoStore.save(todo);
     }
 
     @Timed
     @DELETE
-    public List<Todo> delete(@Context DSLContext db) {
-        db.truncate(TODO).execute();
-        return db.selectFrom(TODO).fetchInto(Todo.class);
+    public List<Todo> deleteAll() {
+        todoStore.deleteAll();
+        return todoStore.getAll();
     }
 
 
     @Path("/{id: [0-9]+}")
     @Timed
     @DELETE
-    public void deleteTodo(@PathParam("id") int id,
-                           @Context DSLContext db) {
-        db.deleteFrom(TODO).where(TODO.ID.eq(id)).execute();
+    public void deleteTodo(@PathParam("id") int id) {
+        todoStore.deleteById(id);
     }
 
     @Path("/{id: [0-9]+}")
     @Timed
     @GET
-    public Todo getTodo(@PathParam("id") int id,
-                        @Context DSLContext db) {
-        return db.selectFrom(TODO).where(TODO.ID.eq(id)).fetchOneInto(Todo.class);
+    public Optional<Todo> getTodo(@PathParam("id") int id) {
+        return todoStore.getById(id);
     }
 
     @Path("/{id: [0-9]+}")
     @Timed
     @PATCH
-    public Todo updateTodo(Todo patchTodo,
-                           @PathParam("id") int id,
-                           @Context DSLContext db) {
-
-        final TodoRecord origTodo = db.selectFrom(TODO).where(TODO.ID.eq(id)).fetchOne();
-        if (origTodo == null) {
-            throw new WebApplicationException("No Todo with id" + id, 404);
-        }
-        if (patchTodo.getTitle() != null) {
-            origTodo.setTitle(patchTodo.getTitle());
-        }
-        if (patchTodo.getCompleted() != null) {
-            origTodo.setCompleted(patchTodo.getCompleted());
-        }
-
-        if (patchTodo.getOrder() != null) {
-            origTodo.setOrder(patchTodo.getOrder());
-        }
-
-        origTodo.store();
-        return origTodo.into(Todo.class);
+    public Todo updateTodo(@PathParam("id") int id, Todo patchTodo) {
+        return todoStore.updateAtIdWithTodo(id, patchTodo);
     }
 
 }

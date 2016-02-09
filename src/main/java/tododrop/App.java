@@ -1,8 +1,6 @@
 package tododrop;
 
 
-import com.bendb.dropwizard.jooq.JooqBundle;
-import com.bendb.dropwizard.jooq.JooqFactory;
 import com.codahale.metrics.JmxReporter;
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Application;
@@ -13,6 +11,10 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import ru.vyarus.dropwizard.guice.GuiceBundle;
+import ru.vyarus.dropwizard.guice.module.installer.feature.ManagedInstaller;
+import ru.vyarus.dropwizard.guice.module.installer.feature.TaskInstaller;
+import ru.vyarus.dropwizard.guice.module.installer.feature.jersey.ResourceInstaller;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -22,7 +24,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import java.util.EnumSet;
 
-public class App extends Application<TodoConfig> {
+class App extends Application<TodoConfig> {
 
 
     public static void main(String[] args) throws Exception {
@@ -48,18 +50,12 @@ public class App extends Application<TodoConfig> {
             }
         });
 
-        // https://github.com/benjamin-bader/droptools/tree/master/dropwizard-jooq
-        bootstrap.addBundle(new JooqBundle<TodoConfig>() {
-            @Override
-            public DataSourceFactory getDataSourceFactory(TodoConfig configuration) {
-                return configuration.getDataSourceFactory();
-            }
-
-            @Override
-            public JooqFactory getJooqFactory(TodoConfig configuration) {
-                return configuration.getJooqFactory();
-            }
-        });
+        // https://github.com/xvik/dropwizard-guicey
+        bootstrap.addBundle(GuiceBundle.<TodoConfig> builder()
+                .installers(ResourceInstaller.class, TaskInstaller.class, ManagedInstaller.class)
+                .extensions(TodoResource.class)
+                .modules(new Module())
+                .build());
     }
 
     @Override
@@ -73,13 +69,15 @@ public class App extends Application<TodoConfig> {
         // Add URL mapping
         cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
 
-        JmxReporter.forRegistry(env.metrics()).build().start(); // Manually add JMX reporting (Dropwizard regression)
+        // Manually add JMX reporting (Dropwizard regression)
+        JmxReporter.forRegistry(env.metrics()).build().start();
 
-        env.jersey().register(new TodoResource());
+
+        // env.jersey().register(new TodoResource());
         env.jersey().register(new WebExceptionMapper());
     }
 
-    public static class WebExceptionMapper implements ExceptionMapper<WebApplicationException> {
+    private static class WebExceptionMapper implements ExceptionMapper<WebApplicationException> {
         @Override
         public Response toResponse(WebApplicationException e) {
             // If the message did not come with a status code, we'll default to an internal

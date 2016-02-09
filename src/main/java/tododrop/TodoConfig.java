@@ -10,23 +10,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public class TodoConfig extends Configuration {
-    @JsonProperty
-    private
-    @NotEmpty
-    String template;
-    @JsonProperty
-    private
-    @NotEmpty
-    String defaultName;
-
-    public String getDefaultName() {
-        return defaultName;
-    }
-
-    public String getTemplate() {
-        return template;
-    }
+final class TodoConfig extends Configuration {
 
     @JsonProperty
     private
@@ -53,7 +37,7 @@ public class TodoConfig extends Configuration {
     @Valid
     @NotNull
     @JsonProperty("flyway")
-    private FlywayFactory flywayFactory = new FlywayFactory();
+    private final FlywayFactory flywayFactory = new FlywayFactory();
 
     public FlywayFactory getFlywayFactory() {
         return flywayFactory;
@@ -61,7 +45,7 @@ public class TodoConfig extends Configuration {
 
 
     @JsonProperty("jooq")
-    private JooqFactory jooqFactory = new JooqFactory();
+    private final JooqFactory jooqFactory = new JooqFactory();
 
     public JooqFactory getJooqFactory() {
         return jooqFactory;

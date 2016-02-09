@@ -1,8 +1,6 @@
 package tododrop;
 
-import static org.junit.Assert.*;
-
-public class TodoResourceTest {
+class TodoResourceTest {
 
     private final TodoResource resource = new TodoResource();
 
