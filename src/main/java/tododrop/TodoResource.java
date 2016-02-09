@@ -18,6 +18,7 @@ import static tododrop.models.Tables.TODO;
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class TodoResource {
+
     @Timed
     @GET
     public List<Todo> getAllTodos(@Context DSLContext db) {
@@ -29,9 +30,8 @@ public class TodoResource {
     public Todo addTodo(Todo todo, @Context DSLContext db) {
         final TodoRecord todoRecord = db.newRecord(TODO, todo);
 
-        // TODO: why can't I null out this.
         // id is determined by database, not user
-//         todoRecord.setId(null);
+        todoRecord.changed(TODO.ID, false);
 
         // url is determined based on id
         todoRecord.setUrl(null);

@@ -61,6 +61,7 @@ dependencies {
 
     compile (
             'com.bendb.dropwizard:dropwizard-jooq:0.9.1-1-SNAPSHOT',
+            'com.google.inject:guice:4.0',
             'com.google.guava:guava:19.0',
             "io.dropwizard:dropwizard-core:$dropwizardVersion",
             "io.dropwizard:dropwizard-db:$dropwizardVersion",
