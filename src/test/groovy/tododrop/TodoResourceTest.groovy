@@ -55,7 +55,7 @@ class TodoResourceTest extends Specification {
                 .request(APPLICATION_JSON_TYPE)
                 .post(entity(todo, APPLICATION_JSON_TYPE))
         then:
-            // How do you test that the returned Person is the same?
+            // How do you test that the returned Todo is the same?
 
             // FAILS: Why doesn't this pass, it's returning 204 - no content
             response.getStatusInfo() == Response.Status.OK
