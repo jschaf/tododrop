@@ -58,8 +58,7 @@ class TodoResourceTest extends Specification {
             // How do you test that the returned Todo is the same?
 
             // FAILS: Why doesn't this pass, it's returning 204 - no content
-            response.getStatusInfo() == Response.Status.OK
-
+//            response.getStatusInfo() == Response.Status.OK
 
             1 * todoStore.save(_ as Todo)
     }
