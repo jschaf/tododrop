@@ -40,7 +40,6 @@ public final class TodoResource {
         return todoStore.getAll();
     }
 
-
     @Path("/{id: [0-9]+}")
     @Timed
     @DELETE

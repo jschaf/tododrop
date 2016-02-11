@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-final class TodoConfig extends Configuration {
+public final class TodoConfig extends Configuration {
 
     @JsonProperty
     private

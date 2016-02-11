@@ -11,7 +11,7 @@ import java.util.List;
 
 import static tododrop.models.Tables.TODO;
 
-final class TodoStore {
+public class TodoStore {
 
     private final DSLContext db;
 
@@ -69,6 +69,7 @@ final class TodoStore {
         if (origTodo == null) {
             throw new WebApplicationException("No Todo with id" + id, 404);
         }
+
         if (patchTodo.getTitle() != null) {
             origTodo.setTitle(patchTodo.getTitle());
         }

@@ -24,14 +24,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import java.util.EnumSet;
 
-class App extends Application<TodoConfig> {
+public class TodoApp extends Application<TodoConfig> {
 
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
-            new App().run("server", "tododrop.yml");
+            new TodoApp().run("server", "tododrop.yml");
         } else {
-            new App().run(args);
+            new TodoApp().run(args);
         }
     }
 

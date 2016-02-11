@@ -19,6 +19,7 @@ buildscript {
 plugins {
     id 'application'
     id 'java'
+    id 'groovy'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
 
@@ -38,6 +39,7 @@ project.ext {
 }
 
 project.sourceCompatibility = 1.8
+project.targetCompatibility = 1.8
 
 mainClassName = 'tododrop.App'
 
@@ -76,11 +78,18 @@ dependencies {
 
     testCompile (
             'junit:junit:4.12',
-            "io.dropwizard:dropwizard-testing:$dropwizardVersion"
+            "io.dropwizard:dropwizard-testing:$dropwizardVersion",
+            'org.codehaus.groovy:groovy-all:2.4.5',
+            'org.spockframework:spock-core:1.0-groovy-2.4',
+            "org.objenesis:objenesis:2.1"    // allows mocking of classes without default constructor (together with CGLIB)
     )
 
-
     runtime 'org.postgresql:postgresql:9.4.1207'
+
+    testRuntime (
+            "cglib:cglib-nodep:3.1",          // allows mocking of classes (in addition to interfaces)
+            "org.objenesis:objenesis:2.1"    // allows mocking of classes without default constructor (together with CGLIB)
+    )
 }
 
 // This complains about a missing library that's in the annotated JDK but not the normal one.
