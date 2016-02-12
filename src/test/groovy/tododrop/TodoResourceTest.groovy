@@ -1,6 +1,7 @@
 package tododrop
 
 import io.dropwizard.testing.junit.ResourceTestRule
+import org.glassfish.jersey.client.ClientResponse
 import org.junit.Rule
 import spock.lang.Specification
 import tododrop.models.tables.pojos.Todo
@@ -49,7 +50,6 @@ class TodoResourceTest extends Specification {
     def "Adding a todo increases number of Todos"() {
         given: "no todos in TodoStore"
         Todo todo = new Todo(1, "title", null, null, null)
-        todoStore.save(_ as Todo) >> todo
 
         when: "we add a Todo"
         def response = resources.client().target("/")
@@ -59,10 +59,9 @@ class TodoResourceTest extends Specification {
         then:
         // How do you test that the returned Todo is the same?
 
-        // FAILS: Why doesn't this pass, it's returning 204 - no content
         response.getStatusInfo() == Response.Status.OK
 
-        1 * todoStore.save(_ as Todo)
+        1 * todoStore.save(_ as Todo) >> todo
     }
 }
 
