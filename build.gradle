@@ -181,6 +181,7 @@ javadoc.options {
 
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerInspectImage
 import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
 import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
 import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
@@ -192,6 +193,54 @@ docker {
     // By default docker uses TLS, so we need to point it to where our certificates are stored.
     certPath = new File(System.properties['user.home'] as String, '.docker/machine/certs/')
 }
+
+task createJavaAppDockerfile(type: Dockerfile) {
+    dependsOn shadowJar
+    destFile = file('build/dockerfiles/javaApp/Dockerfile')
+    from 'java:8'
+    addFile('tododrop.yml', 'tododrop.yml')
+    addFile("tododrop-$version-all.jar", "tododrop-$version-all.jar")
+    runCommand("java -jar tododrop-$version-all.jar server tododrop.yml")
+}
+
+task buildJavaAppImage(type: DockerBuildImage) {
+    dependsOn createJavaAppDockerfile
+    inputDir = createJavaAppDockerfile.destFile.parentFile
+    tag = 'tododrop:app'
+
+    // We have to copy all files that we add to the docker container so that they are visible
+    // to the Dockerfile.  Dockerfiles don't allow files outside of the immediate containing folder.
+    // See https://github.com/docker/docker/issues/2745 for history.  It's a wontfix bug due to
+    // security concerns.
+    doFirst {
+        copy {
+            from "$buildDir/libs/tododrop-$version-all.jar"
+            into "$buildDir/dockerfiles/javaApp"
+        }
+
+        copy {
+            from file('tododrop.yml')
+            into "$buildDir/dockerfiles/javaApp"
+        }
+    }
+}
+
+task inspectJavaAppImage(type: DockerInspectImage) {
+    dependsOn buildJavaAppImage
+    targetImageId { dockerBuildImage.getImageId() }
+}
+
+task createJavaAppContainer(type: DockerCreateContainer) {
+    dependsOn inspectJavaAppImage
+    targetImageId { dockerBuildImage.getImageId() }
+}
+
+task startJavaAppContainer(type: DockerStartContainer) {
+    dependsOn createJavaAppContainer
+    targetContainerId { createJavaAppContainer.getContainerId() }
+}
+
+
 
 
 // The port on the host that maps to postgresql container's port
@@ -258,4 +307,8 @@ task stage {
 
 run {
     systemProperty "dropwizard.config", "tododrop.yml"
+}
+
+artifacts {
+    archives shadowJar
 }
