@@ -10,6 +10,7 @@ buildscript {
     }
     dependencies {
         classpath 'ch.raffael.pegdown-doclet:pegdown-doclet:1.2'
+        classpath 'com.bmuschko:gradle-docker-plugin:2.6.5'
         classpath 'org.jooq:jooq-codegen:3.7.2'
         classpath 'org.yaml:snakeyaml:1.16'
         classpath 'org.postgresql:postgresql:9.4.1207'
@@ -20,6 +21,8 @@ plugins {
     id 'application'
     id 'java'
     id 'groovy'
+
+    id 'com.bmuschko.docker-remote-api' version '2.6.5'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'org.unbroken-dome.test-sets' version '1.2.0'
 }
@@ -82,19 +85,22 @@ dependencies {
     )
     compile configurations.checker.dependencies
 
+    runtime 'org.postgresql:postgresql:9.4.1207'
+
     testCompile (
             'junit:junit:4.12',
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",
             'org.codehaus.groovy:groovy-all:2.4.5',
             'org.spockframework:spock-core:1.0-groovy-2.4',
-            "org.objenesis:objenesis:2.1"    // allows mocking of classes without default constructor (together with CGLIB)
+            "org.objenesis:objenesis:2.1",   // allows mocking of classes without default constructor (together with CGLIB)
     )
-
-    runtime 'org.postgresql:postgresql:9.4.1207'
 
     testRuntime (
             "cglib:cglib-nodep:3.1",          // allows mocking of classes (in addition to interfaces)
             "org.objenesis:objenesis:2.1"    // allows mocking of classes without default constructor (together with CGLIB)
+    )
+
+    integrationTestCompile (
     )
 }
 
@@ -169,6 +175,52 @@ javadoc.options {
     docletpath = configurations.markdownDoclet.files.asType(List)
     doclet = "ch.raffael.doclets.pegdown.PegdownDoclet"
     addStringOption("parse-timeout", "10")
+}
+
+
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
+import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
+
+docker {
+    // Use `docker-machine ls` to see the url of available machines.
+    // Replace tcp:// with https://
+    url = 'https://192.168.99.100:2376'
+    // By default docker uses TLS, so we need to point it to where our certificates are stored.
+    certPath = new File(System.properties['user.home'] as String, '.docker/machine/certs/')
+}
+
+
+// The port on the host that maps to postgresql container's port
+String PSQL_PORT_ON_HOST = '3141'
+
+task createPostgresDockerfile(type: Dockerfile) {
+    destFile = project.file('build/dockerfiles/postgres94/Dockerfile')
+    from 'sameersbn/postgresql:9.4-12'
+    environmentVariable('yolo', 'true')
+}
+
+task buildPostgresImage(type: DockerBuildImage) {
+    dependsOn createPostgresDockerfile
+    inputDir = createPostgresDockerfile.destFile.parentFile
+    tag = 'tododrop/postgres94'
+}
+
+task createPostgresContainer(type: DockerCreateContainer) {
+    dependsOn buildPostgresImage
+    targetImageId { buildPostgresImage.getImageId() }
+    portBindings = ["$PSQL_PORT_ON_HOST:5432"]
+}
+
+task startPostgresContainer(type: DockerStartContainer) {
+    dependsOn createPostgresContainer
+    targetContainerId { createPostgresContainer.getContainerId() }
+}
+
+task stopPostgresContainer(type: DockerStopContainer) {
+    targetContainerId { createPostgresContainer.getContainerId() }
 }
 
 
