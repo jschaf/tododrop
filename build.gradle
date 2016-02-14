@@ -73,6 +73,7 @@ dependencies {
     compile (
             'com.bendb.dropwizard:dropwizard-jooq:0.9.1-1-SNAPSHOT',
             'com.google.guava:guava:19.0',
+            'de.thomaskrille:dropwizard-template-config:1.1.0',
             "io.dropwizard:dropwizard-core:$dropwizardVersion",
             "io.dropwizard:dropwizard-db:$dropwizardVersion",
             "io.dropwizard:dropwizard-testing:$dropwizardVersion",

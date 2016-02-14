@@ -2,7 +2,9 @@ package tododrop;
 
 
 import com.codahale.metrics.JmxReporter;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import de.thomaskrille.dropwizard_template_config.TemplateConfigBundle;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.flyway.FlywayBundle;
@@ -37,6 +39,7 @@ public class TodoApp extends Application<TodoConfig> {
 
     @Override
     public void initialize(Bootstrap<TodoConfig> bootstrap) {
+
         // https://github.com/dropwizard/dropwizard-flyway
         bootstrap.addBundle(new FlywayBundle<TodoConfig>() {
             @Override
@@ -49,6 +52,9 @@ public class TodoApp extends Application<TodoConfig> {
                 return configuration.getFlywayFactory();
             }
         });
+
+        // https://github.com/tkrille/dropwizard-template-config
+        bootstrap.addBundle(new TemplateConfigBundle());
 
         // https://github.com/xvik/dropwizard-guicey
         bootstrap.addBundle(GuiceBundle.<TodoConfig> builder()
