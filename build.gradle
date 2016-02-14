@@ -382,9 +382,14 @@ jar {
     }
 }
 
-// Don't run tests on stage, because integration tests will wipe
-// the database.
-task stage {
+
+// Stage - task for Heroku
+// =======================
+//
+// Heroku runs the task stage for gradle builds.  We don't run tests on stage,
+// because integration tests will wipe the database.
+task stage(type: Task) {
+    description "Task for Heroku to build the JAR.  Doesn't run any tests."
     dependsOn shadowJar
 }
 
