@@ -196,15 +196,17 @@ docker {
 
 task createJavaAppDockerfile(type: Dockerfile) {
     dependsOn shadowJar
-    destFile = file('build/dockerfiles/javaApp/Dockerfile')
+    destFile = file("$buildDir/javaApp.Dockerfile")
     from 'java:8'
     addFile('tododrop.yml', 'tododrop.yml')
-    addFile("tododrop-$version-all.jar", "tododrop-$version-all.jar")
-    runCommand("java -jar tododrop-$version-all.jar server tododrop.yml")
+    addFile("libs/tododrop-$version-all.jar", "tododrop-$version-all.jar")
+    environmentVariable("JDBC_DATABASE_URL", "")
+//    runCommand("java -jar tododrop-$version-all.jar server tododrop.yml")
 }
 
 task buildJavaAppImage(type: DockerBuildImage) {
     dependsOn createJavaAppDockerfile
+    dockerFile = file("$buildDir/javaApp.Dockerfile")
     inputDir = createJavaAppDockerfile.destFile.parentFile
     tag = 'tododrop:app'
 
@@ -214,20 +216,15 @@ task buildJavaAppImage(type: DockerBuildImage) {
     // security concerns.
     doFirst {
         copy {
-            from "$buildDir/libs/tododrop-$version-all.jar"
-            into "$buildDir/dockerfiles/javaApp"
-        }
-
-        copy {
             from file('tododrop.yml')
-            into "$buildDir/dockerfiles/javaApp"
+            into "$buildDir"
         }
     }
 }
 
 task inspectJavaAppImage(type: DockerInspectImage) {
     dependsOn buildJavaAppImage
-    targetImageId { dockerBuildImage.getImageId() }
+    targetImageId { buildJavaAppImage.getImageId() }
 }
 
 task createJavaAppContainer(type: DockerCreateContainer) {
@@ -237,6 +234,7 @@ task createJavaAppContainer(type: DockerCreateContainer) {
 
 task startJavaAppContainer(type: DockerStartContainer) {
     dependsOn createJavaAppContainer
+    mustRunAfter startPostgresContainer
     targetContainerId { createJavaAppContainer.getContainerId() }
 }
 

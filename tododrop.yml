@@ -1,8 +1,7 @@
 database:
   driverClass: org.postgresql.Driver
-  user: todo
-  password: password
-  url: jdbc:postgresql://localhost:5432/todo
+  # We include the user and password in the JDBC_DATABASE_URL
+  url: ${JDBC_DATABASE_URL} # jdbc:postgresql://localhost:5432/todo
 
 schema: tododrop
 
