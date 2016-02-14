@@ -115,6 +115,7 @@ dependencies {
     )
 
     testRuntime (
+            // FIXME: These should go in integrationTestRuntime but that doesn't work.
             "cglib:cglib-nodep:3.1",          // allows mocking of classes (in addition to interfaces)
             "org.objenesis:objenesis:2.1"    // allows mocking of classes without default constructor (together with CGLIB)
     )
@@ -171,18 +172,21 @@ project.afterEvaluate {
 //}
 
 
-task generateJooqCode {
-//    description = 'Generate Java API for the database.'
+// jOOQ Schema Generation - generate fluent API based on database schema
+// =====================================================================
+//
+// Example taken from:
+// https://github.com/jOOQ/jOOQ/tree/master/jOOQ-examples/jOOQ-codegen-gradle
+task generateJooqCode(type: Task) {
+    description  'Generate Java API for the database.'
     doLast {
-        // https://github.com/jOOQ/jOOQ/tree/master/jOOQ-examples/jOOQ-codegen-gradle
         def writer = new StringWriter()
         def xml = new MarkupBuilder(writer)
         xml.configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.7.0.xsd') {
             jdbc() {
                 driver(dbConfig.driverClass)
+                // The url includes the user and password.
                 url(dbConfig.url)
-                user(dbConfig.user)
-                password(dbConfig.password)
             }
             generator() {
                 database() {
@@ -217,6 +221,7 @@ task generateJooqCode {
     }
 }
 
+// Include generated jOOQ code as a source.
 sourceSets {
     main.java.srcDir 'src/generated/java'
 }
