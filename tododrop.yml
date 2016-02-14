@@ -1,12 +1,14 @@
 database:
   driverClass: org.postgresql.Driver
-  # We include the user and password in the JDBC_DATABASE_URL
-  url: ${JDBC_DATABASE_URL} # jdbc:postgresql://localhost:5432/todo
+  # We include the user and password in the JDBC_DATABASE_URL because that's how
+  # Heroku does it, and it makes configuration simpler. The syntax for default
+  # values is similar to Bash, e.g ${ENV_VAR:-DEFAULT_VALUE}
+  url: ${JDBC_DATABASE_URL:-jdbc:postgresql://localhost:5432/todo?user=todo&password=password}
 
-schema: tododrop
+schema: public
 
+# Flyway configuration options
+# https://github.com/dropwizard/dropwizard-flyway
 flyway:
   locations:
     - db/migration
-  schemas:
-    - tododrop
