@@ -123,8 +123,41 @@ dependencies {
     )
 }
 
+// Database Migration - Flyway
+// ===========================
+//
+// We include flyway migration capability in both build.gradle and in
+// TodoApp.java because if we distribute only the JAR, migrations should
+// still work.
+flyway {
+    url = dbConfig.url
+}
+
+// ## Flyway - don't depend on testClasses to prevent circular dependency
+//
+// Flyway needs to support Java migrations, so it depends on testClasses.
+// That results in a circular dependency for jOOQ because we need database migrations
+// to run before the jOOQ code generator to let jOOQ generate the updated schema.
+// The gradle task compileJava relies on jOOQ generate files.
+// See https://github.com/flyway/flyway/issues/775 for details.
+project.afterEvaluate {
+    project.tasks.each {
+        if (it.name.startsWith("flyway")) {
+            it.dependsOn -= testClasses
+        }
+    }
+    // The migration scripts are located in src/main/resources/db/migration.
+    // We have to add them to the classpath so flyway can find them.
+    flywayMigrate.dependsOn = [processResources]
+}
+
+
+// Checkstyle
+// ==========
+//
 // This complains about a missing library that's in the annotated JDK but not the normal one.
 // The code below should work but of course it fucking doesn't.
+
 //allprojects {
 //    tasks.withType(JavaCompile).all { JavaCompile compile ->
 //        compile.options.debug = true
