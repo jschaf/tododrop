@@ -60,6 +60,7 @@ public class TodoApp extends Application<TodoConfig> {
                         new EnvironmentVariableSubstitutor(false)
                 ));
 
+        // Dependency Injection
         // https://github.com/xvik/dropwizard-guicey
         bootstrap.addBundle(GuiceBundle.<TodoConfig> builder()
                 .installers(ResourceInstaller.class, TaskInstaller.class, ManagedInstaller.class)
