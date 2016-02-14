@@ -2,6 +2,9 @@ import groovy.xml.MarkupBuilder
 import org.jooq.util.GenerationTool
 import org.yaml.snakeyaml.Yaml
 import javax.xml.bind.JAXB
+import io.dropwizard.configuration.FileConfigurationSourceProvider
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor
+import io.dropwizard.configuration.SubstitutingSourceProvider
 
 buildscript {
     repositories {
@@ -11,9 +14,10 @@ buildscript {
     dependencies {
         classpath 'ch.raffael.pegdown-doclet:pegdown-doclet:1.2'
         classpath 'com.bmuschko:gradle-docker-plugin:2.6.5'
+        classpath 'org.flywaydb:flyway-gradle-plugin:3.2.1'
         classpath 'org.jooq:jooq-codegen:3.7.2'
-        classpath 'org.yaml:snakeyaml:1.16'
         classpath 'org.postgresql:postgresql:9.4.1207'
+        classpath 'org.yaml:snakeyaml:1.16'
     }
 }
 
@@ -25,6 +29,7 @@ plugins {
     id 'com.bmuschko.docker-remote-api' version '2.6.5'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
     id 'org.unbroken-dome.test-sets' version '1.2.0'
+    id 'org.flywaydb.flyway' version '3.2.1'
 }
 
 apply plugin: 'ch.raffael.pegdown-doclet'
@@ -32,10 +37,23 @@ apply plugin: 'ch.raffael.pegdown-doclet'
 group 'tododrop'
 version '0.1'
 
-// load config from YAML
-File configFile = new File('tododrop.yml')
+// YAML Configuration
+// ==================
+//
+// Load config variables from YAML which is the canonical source of truth.
+// We desperately want to avoid defining configuration variables in two places.
+String CONFIG_FILE_PATH = file('tododrop.yml')
+
+// Replace variables like ${JDBC_DATABASE_URL} with the corresponding
+// environmental variable by reusing Dropwizard's configuration modules.
+def is_strict_environmental = false
+def substitutingFileReader = new SubstitutingSourceProvider(
+        new FileConfigurationSourceProvider(),
+        new EnvironmentVariableSubstitutor(is_strict_environmental))
+def configWithEnvVars = substitutingFileReader.open(CONFIG_FILE_PATH)
+
 Yaml yaml = new Yaml();
-def config = yaml.load(configFile.newReader())
+def config = yaml.load(configWithEnvVars)
 def dbConfig = config.database;
 
 project.ext {
