@@ -14,6 +14,7 @@ buildscript {
     dependencies {
         classpath 'ch.raffael.pegdown-doclet:pegdown-doclet:1.2'
         classpath 'com.bmuschko:gradle-docker-plugin:2.6.5'
+        classpath "io.dropwizard:dropwizard-configuration:0.9.2"
         classpath 'org.flywaydb:flyway-gradle-plugin:3.2.1'
         classpath 'org.jooq:jooq-codegen:3.7.2'
         classpath 'org.postgresql:postgresql:9.4.1207'
@@ -52,9 +53,9 @@ def substitutingFileReader = new SubstitutingSourceProvider(
         new EnvironmentVariableSubstitutor(is_strict_environmental))
 def configWithEnvVars = substitutingFileReader.open(CONFIG_FILE_PATH)
 
-Yaml yaml = new Yaml();
+def yaml = new Yaml()
 def config = yaml.load(configWithEnvVars)
-def dbConfig = config.database;
+def dbConfig = config.database
 
 project.ext {
     dropwizardVersion = '0.9.2'
@@ -185,7 +186,8 @@ task generateJooqCode(type: Task) {
         xml.configuration('xmlns': 'http://www.jooq.org/xsd/jooq-codegen-3.7.0.xsd') {
             jdbc() {
                 driver(dbConfig.driverClass)
-                // The url includes the user and password.
+                user(dbConfig.user)
+                password(dbConfig.password)
                 url(dbConfig.url)
             }
             generator() {
@@ -253,18 +255,24 @@ docker {
 // The port on the host that maps to postgresql container's port
 String PSQL_PORT_ON_HOST = '3141'
 
-String DATABASE_CONTAINER_NAME = 'tododrop_database'
+String DATABASE_CONTAINER_NAME = 'tododrop_db'
 
 task createPostgresDockerfile(type: Dockerfile) {
-    destFile = project.file('build/dockerfiles/postgres94/Dockerfile')
+    destFile = project.file("$buildDir/postgres94.Dockerfile")
     from 'sameersbn/postgresql:9.4-12'
-    environmentVariable('yolo', 'true')
+    // The following environmental variables create a database named 'todo_db'
+    // and a user 'todo_user' with password, 'password'.  See
+    // https://github.com/sameersbn/docker-postgresql for all options.
+    environmentVariable('DB_NAME', 'todo_db')
+    environmentVariable('DB_USER', 'todo_user')
+    environmentVariable('DB_PASS', 'password')
 }
 
 task buildPostgresImage(type: DockerBuildImage) {
     dependsOn createPostgresDockerfile
+    dockerFile = file("$buildDir/postgres94.Dockerfile")
     inputDir = createPostgresDockerfile.destFile.parentFile
-    tag = 'tododrop/postgres94'
+    tag = 'tododrop/db'
 }
 
 task createPostgresContainer(type: DockerCreateContainer) {
@@ -286,23 +294,29 @@ task stopPostgresContainer(type: DockerStopContainer) {
 // Docker for the Java Application
 // ===============================
 
-String APP_JAR = "libs/tododrop-$version-all.jar"
+String APP_JAR = "tododrop-$version-all.jar"
 
 task createJavaAppDockerfile(type: Dockerfile) {
     dependsOn shadowJar
     destFile = file("$buildDir/javaApp.Dockerfile")
     from 'java:8'
+    workingDir '/data'
     addFile('tododrop.yml', 'tododrop.yml')
-    addFile(APP_JAR, APP_JAR)
-    environmentVariable("JDBC_DATABASE_URL", "")
+    addFile('setup_docker_env.sh', 'setup_docker_env.sh')
+    addFile("libs/$APP_JAR", APP_JAR)
+//    environmentVariable("JDBC_DATABASE_URL", "DOESNT_WORK")
 //    runCommand("java -jar tododrop-$version-all.jar server tododrop.yml")
+
+
+//    runCommand("export RUN_COMMAND=AWESOME && echo yolo")
+//    defaultCommand("setup_docker_env.sh")
 }
 
 task buildJavaAppImage(type: DockerBuildImage) {
     dependsOn createJavaAppDockerfile
     dockerFile = file("$buildDir/javaApp.Dockerfile")
     inputDir = createJavaAppDockerfile.destFile.parentFile
-    tag = 'tododrop:app'
+    tag = 'tododrop/app'
 
     // We have to copy all files that we add to the docker container so that they are visible
     // to the Dockerfile.  Dockerfiles don't allow files outside of the immediate containing folder.
@@ -311,6 +325,10 @@ task buildJavaAppImage(type: DockerBuildImage) {
     doFirst {
         copy {
             from file('tododrop.yml')
+            into "$buildDir"
+        }
+        copy {
+            from file('setup_docker_env.sh')
             into "$buildDir"
         }
     }
@@ -325,27 +343,11 @@ task inspectJavaAppImage(type: DockerInspectImage) {
 
 task createJavaAppContainer(type: DockerCreateContainer) {
     dependsOn inspectJavaAppImage
-    containerName APP_CONTAINER_NAME
-    links = [DATABASE_CONTAINER_NAME]
-    cmd = ["java -jar "]
-//    hostName
-//    portSpecs
-//    user
-//    stdinOpen
-//    stdinOnce
-//    memoryLimit
-//    memorySwap
-//    cpuset
-//    portBindings
-//    publishAll
-//    attachStdin
-//    attachStdout
-//    attachStderr
-//    env
-//    cmd
-//    image
-//    exposedPorts
-//    logConfig
+    containerName = APP_CONTAINER_NAME
+    links = ["$DATABASE_CONTAINER_NAME:db"]
+//    env =["MY_NEW_ENV=YOLO", "DATABASE_USER=\$DB_ENV_DB_USER"]
+    cmd = ["/bin/bash", "setup_docker_env.sh"]
+
     targetImageId { buildJavaAppImage.getImageId() }
 }
 

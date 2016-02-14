@@ -1,5 +1,7 @@
 database:
   driverClass: org.postgresql.Driver
+  user: ${DATABASE_USER}
+  password: ${DATABASE_PASSWORD}
   # We include the user and password in the JDBC_DATABASE_URL because that's how
   # Heroku does it, and it makes configuration simpler. The syntax for default
   # values is similar to Bash, e.g ${ENV_VAR:-DEFAULT_VALUE}
