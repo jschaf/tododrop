@@ -2,7 +2,7 @@
 --
 -- CREATE SCHEMA tododrop;
 
-CREATE TABLE tododrop.todo (
+CREATE TABLE todo (
   id SERIAL PRIMARY KEY,
   title TEXT,
   completed BOOLEAN,
