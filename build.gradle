@@ -235,12 +235,8 @@ javadoc.options {
 }
 
 
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerInspectImage
-import com.bmuschko.gradle.docker.tasks.container.DockerCreateContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerStartContainer
-import com.bmuschko.gradle.docker.tasks.container.DockerStopContainer
+import com.bmuschko.gradle.docker.tasks.image.*
+import com.bmuschko.gradle.docker.tasks.container.*
 
 docker {
     // Use `docker-machine ls` to see the url of available machines.
@@ -250,12 +246,54 @@ docker {
     certPath = new File(System.properties['user.home'] as String, '.docker/machine/certs/')
 }
 
+
+// Docker for the Database
+// =======================
+
+// The port on the host that maps to postgresql container's port
+String PSQL_PORT_ON_HOST = '3141'
+
+String DATABASE_CONTAINER_NAME = 'tododrop_database'
+
+task createPostgresDockerfile(type: Dockerfile) {
+    destFile = project.file('build/dockerfiles/postgres94/Dockerfile')
+    from 'sameersbn/postgresql:9.4-12'
+    environmentVariable('yolo', 'true')
+}
+
+task buildPostgresImage(type: DockerBuildImage) {
+    dependsOn createPostgresDockerfile
+    inputDir = createPostgresDockerfile.destFile.parentFile
+    tag = 'tododrop/postgres94'
+}
+
+task createPostgresContainer(type: DockerCreateContainer) {
+    dependsOn buildPostgresImage
+    containerName = DATABASE_CONTAINER_NAME
+    targetImageId { buildPostgresImage.getImageId() }
+    portBindings = ["$PSQL_PORT_ON_HOST:5432"]
+}
+
+task startPostgresContainer(type: DockerStartContainer) {
+    dependsOn createPostgresContainer
+    targetContainerId { createPostgresContainer.getContainerId() }
+}
+
+task stopPostgresContainer(type: DockerStopContainer) {
+    targetContainerId { createPostgresContainer.getContainerId() }
+}
+
+// Docker for the Java Application
+// ===============================
+
+String APP_JAR = "libs/tododrop-$version-all.jar"
+
 task createJavaAppDockerfile(type: Dockerfile) {
     dependsOn shadowJar
     destFile = file("$buildDir/javaApp.Dockerfile")
     from 'java:8'
     addFile('tododrop.yml', 'tododrop.yml')
-    addFile("libs/tododrop-$version-all.jar", "tododrop-$version-all.jar")
+    addFile(APP_JAR, APP_JAR)
     environmentVariable("JDBC_DATABASE_URL", "")
 //    runCommand("java -jar tododrop-$version-all.jar server tododrop.yml")
 }
@@ -278,6 +316,8 @@ task buildJavaAppImage(type: DockerBuildImage) {
     }
 }
 
+String APP_CONTAINER_NAME = 'tododrop_app'
+
 task inspectJavaAppImage(type: DockerInspectImage) {
     dependsOn buildJavaAppImage
     targetImageId { buildJavaAppImage.getImageId() }
@@ -285,7 +325,28 @@ task inspectJavaAppImage(type: DockerInspectImage) {
 
 task createJavaAppContainer(type: DockerCreateContainer) {
     dependsOn inspectJavaAppImage
-    targetImageId { dockerBuildImage.getImageId() }
+    containerName APP_CONTAINER_NAME
+    links = [DATABASE_CONTAINER_NAME]
+    cmd = ["java -jar "]
+//    hostName
+//    portSpecs
+//    user
+//    stdinOpen
+//    stdinOnce
+//    memoryLimit
+//    memorySwap
+//    cpuset
+//    portBindings
+//    publishAll
+//    attachStdin
+//    attachStdout
+//    attachStderr
+//    env
+//    cmd
+//    image
+//    exposedPorts
+//    logConfig
+    targetImageId { buildJavaAppImage.getImageId() }
 }
 
 task startJavaAppContainer(type: DockerStartContainer) {
@@ -294,38 +355,6 @@ task startJavaAppContainer(type: DockerStartContainer) {
     targetContainerId { createJavaAppContainer.getContainerId() }
 }
 
-
-
-
-// The port on the host that maps to postgresql container's port
-String PSQL_PORT_ON_HOST = '3141'
-
-task createPostgresDockerfile(type: Dockerfile) {
-    destFile = project.file('build/dockerfiles/postgres94/Dockerfile')
-    from 'sameersbn/postgresql:9.4-12'
-    environmentVariable('yolo', 'true')
-}
-
-task buildPostgresImage(type: DockerBuildImage) {
-    dependsOn createPostgresDockerfile
-    inputDir = createPostgresDockerfile.destFile.parentFile
-    tag = 'tododrop/postgres94'
-}
-
-task createPostgresContainer(type: DockerCreateContainer) {
-    dependsOn buildPostgresImage
-    targetImageId { buildPostgresImage.getImageId() }
-    portBindings = ["$PSQL_PORT_ON_HOST:5432"]
-}
-
-task startPostgresContainer(type: DockerStartContainer) {
-    dependsOn createPostgresContainer
-    targetContainerId { createPostgresContainer.getContainerId() }
-}
-
-task stopPostgresContainer(type: DockerStopContainer) {
-    targetContainerId { createPostgresContainer.getContainerId() }
-}
 
 
 check.dependsOn integrationTest
