@@ -2,10 +2,10 @@ package tododrop;
 
 
 import com.codahale.metrics.JmxReporter;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import de.thomaskrille.dropwizard_template_config.TemplateConfigBundle;
 import io.dropwizard.Application;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.flyway.FlywayBundle;
 import io.dropwizard.flyway.FlywayFactory;
@@ -53,8 +53,12 @@ public class TodoApp extends Application<TodoConfig> {
             }
         });
 
-        // https://github.com/tkrille/dropwizard-template-config
-        bootstrap.addBundle(new TemplateConfigBundle());
+        // Enable variable substitution with environment variables
+        // http://www.dropwizard.io/0.9.2/docs/manual/core.html#environment-variables
+        bootstrap.setConfigurationSourceProvider(
+                new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor(false)
+                ));
 
         // https://github.com/xvik/dropwizard-guicey
         bootstrap.addBundle(GuiceBundle.<TodoConfig> builder()
