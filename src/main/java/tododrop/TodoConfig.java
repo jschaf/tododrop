@@ -50,5 +50,4 @@ public final class TodoConfig extends Configuration {
     public JooqFactory getJooqFactory() {
         return jooqFactory;
     }
-
 }

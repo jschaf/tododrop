@@ -30,7 +30,8 @@ public final class TodoResource {
     @Timed
     @POST
     public Todo addTodo(Todo todo) {
-        return todoStore.save(todo);
+        final Todo save = todoStore.save(todo);
+        return save;
     }
 
     @Timed

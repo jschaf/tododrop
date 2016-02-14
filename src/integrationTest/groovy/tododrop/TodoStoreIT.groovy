@@ -10,7 +10,6 @@ import tododrop.models.tables.pojos.Todo
 @UseDropwizardApp(value = TodoApp.class, config = "tododrop.yml")
 class TodoStoreIT extends Specification {
 
-
     @Inject
     TodoStore todoStore;
 
@@ -26,7 +25,7 @@ class TodoStoreIT extends Specification {
         when: "we select an id of 324"
             Optional<Todo> todo = todoStore.getById(324)
         then:
-            todo.get().id == 325
+            todo.get().id == 324
 
     }
 

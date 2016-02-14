@@ -57,7 +57,7 @@ class TodoResourceTest extends Specification {
                 .post(entity(todo, APPLICATION_JSON_TYPE))
 
         then:
-        // How do you test that the returned Todo is the same?
+        // How do you test that the returned todo_object is the same?
 
         response.getStatusInfo() == Response.Status.OK
 
