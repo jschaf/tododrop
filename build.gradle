@@ -91,6 +91,7 @@ dependencies {
 
     compile (
             'com.bendb.dropwizard:dropwizard-jooq:0.9.1-1-SNAPSHOT',
+            "com.github.rholder:guava-retrying:2.0.0",
             'com.google.guava:guava:19.0',
             "io.dropwizard:dropwizard-configuration:$dropwizardVersion",
             "io.dropwizard:dropwizard-core:$dropwizardVersion",

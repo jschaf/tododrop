@@ -2,6 +2,7 @@ package tododrop;
 
 
 import com.codahale.metrics.JmxReporter;
+import com.github.rholder.retry.*;
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -13,6 +14,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.flywaydb.core.api.FlywayException;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 import ru.vyarus.dropwizard.guice.module.installer.feature.ManagedInstaller;
 import ru.vyarus.dropwizard.guice.module.installer.feature.TaskInstaller;
@@ -25,15 +27,39 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import java.util.EnumSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 public class TodoApp extends Application<TodoConfig> {
 
 
+
     public static void main(String[] args) throws Exception {
+
+
+        // Convenience
         if (args.length == 0) {
             new TodoApp().run("server", "tododrop.yml");
-        } else {
+            return;
+        }
+
+        // FIXME: how can we make the return type Void or ?
+        final Callable<Object> appCallable = () -> {
             new TodoApp().run(args);
+            return null;
+        };
+
+        final Retryer<Object> retryer = RetryerBuilder.newBuilder()
+                .retryIfExceptionOfType(FlywayException.class)
+                .retryIfRuntimeException()
+                .withStopStrategy(StopStrategies.stopAfterAttempt(20))
+                .withWaitStrategy(WaitStrategies.fixedWait(2, TimeUnit.SECONDS))
+                .build();
+
+        try {
+            retryer.call(appCallable);
+        } catch (RetryException e) {
+            e.printStackTrace();
         }
     }
 
