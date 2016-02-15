@@ -23,9 +23,9 @@ class TodoStoreIT extends Specification {
 
     def "getById works"() {
         when: "we select an id of 324"
-            Optional<Todo> todo = todoStore.getById(324)
+            Optional<Todo> todo = todoStore.getById(26)
         then:
-            todo.get().id == 324
+            todo.get().id == 26
 
     }
 
