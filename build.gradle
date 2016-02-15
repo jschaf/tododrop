@@ -1,15 +1,17 @@
-import groovy.xml.MarkupBuilder
-import org.jooq.util.GenerationTool
-import org.yaml.snakeyaml.Yaml
-import javax.xml.bind.JAXB
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.dropwizard.configuration.FileConfigurationSourceProvider
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor
 import io.dropwizard.configuration.SubstitutingSourceProvider
+import org.jooq.util.GenerationTool
+import org.yaml.snakeyaml.Yaml
+
+import groovy.xml.MarkupBuilder
+
+import javax.xml.bind.JAXB
 
 buildscript {
     repositories {
         jcenter()
-
     }
     dependencies {
         classpath 'ch.raffael.pegdown-doclet:pegdown-doclet:1.2'
@@ -70,6 +72,7 @@ allprojects {
     repositories {
         jcenter()
         maven {
+            // Needed for dropwizard-jooq SNAPSHOT which had bug fixes we need.
             url = 'https://oss.sonatype.org/content/repositories/snapshots'
         }
     }
@@ -241,10 +244,12 @@ javadoc.options {
 import com.bmuschko.gradle.docker.tasks.image.*
 import com.bmuschko.gradle.docker.tasks.container.*
 
+final String DOCKER_IP_ADDRESS = '192.168.99.100'
+
 docker {
     // Use `docker-machine ls` to see the url of available machines.
     // Replace tcp:// with https://
-    url = 'https://192.168.99.100:2376'
+    url = "https://$DOCKER_IP_ADDRESS:2376"
     // By default docker uses TLS, so we need to point it to where our certificates are stored.
     certPath = new File(System.properties['user.home'] as String, '.docker/machine/certs/')
 }
@@ -289,13 +294,14 @@ task startPostgresContainer(type: DockerStartContainer) {
 }
 
 task stopPostgresContainer(type: DockerStopContainer) {
+    dependsOn startPostgresContainer
     targetContainerId { createPostgresContainer.getContainerId() }
 }
 
 // Docker for the Java Application
 // ===============================
 
-String APP_JAR = "tododrop-$version-all.jar"
+final String APP_JAR = "tododrop-$version-all.jar"
 
 task createJavaAppDockerfile(type: Dockerfile) {
     dependsOn shadowJar
@@ -308,12 +314,6 @@ task createJavaAppDockerfile(type: Dockerfile) {
 
     // Dropwizard uses 8080 for normal traffic and 8081 for admin traffic
     exposePort(8080, 8081)
-//    environmentVariable("JDBC_DATABASE_URL", "DOESNT_WORK")
-//    runCommand("java -jar tododrop-$version-all.jar server tododrop.yml")
-
-
-//    runCommand("export RUN_COMMAND=AWESOME && echo yolo")
-//    defaultCommand("setup_docker_env.sh")
 }
 
 task buildJavaAppImage(type: DockerBuildImage) {
@@ -338,7 +338,8 @@ task buildJavaAppImage(type: DockerBuildImage) {
     }
 }
 
-String APP_CONTAINER_NAME = 'tododrop_app'
+final String APP_CONTAINER_NAME = 'tododrop_app'
+final String APP_PORT_ON_HOST = '8080'
 
 task inspectJavaAppImage(type: DockerInspectImage) {
     dependsOn buildJavaAppImage
@@ -346,18 +347,19 @@ task inspectJavaAppImage(type: DockerInspectImage) {
 }
 
 task createJavaAppContainer(type: DockerCreateContainer) {
-    dependsOn inspectJavaAppImage
+    dependsOn = [inspectJavaAppImage, startPostgresContainer]
     containerName = APP_CONTAINER_NAME
     links = ["$DATABASE_CONTAINER_NAME:db"]
     cmd = ["/bin/bash", "setup_docker_env.sh"]
+    env = ["APP_URL=http://$DOCKER_IP_ADDRESS:$APP_PORT_ON_HOST/"]
     // Map the host port to the Dropwizard exposed ports
-    portBindings = ["8080:8080", "8181:8181"]
+    portBindings = ["$APP_PORT_ON_HOST:8080", "8181:8181"]
     targetImageId { buildJavaAppImage.getImageId() }
 }
 
 task startJavaAppContainer(type: DockerStartContainer) {
     dependsOn createJavaAppContainer
-    mustRunAfter startPostgresContainer
+//    mustRunAfter startPostgresContainer
     targetContainerId { createJavaAppContainer.getContainerId() }
 }
 
