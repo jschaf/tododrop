@@ -384,6 +384,17 @@ shadowJar {
     exclude 'META-INF/*.RSA'
 }
 
+task packageTests(type: ShadowJar) {
+    classifier 'tests'
+    from sourceSets.main.output, sourceSets.test.output, sourceSets.integrationTest.output
+    configurations = [project.configurations.runtime,
+                      project.configurations.testRuntime,
+                      project.configurations.integrationTestRuntime]
+    mergeServiceFiles()
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+}
+
 jar {
     manifest {
         attributes 'Main-Class': mainClassName
