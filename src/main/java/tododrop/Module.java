@@ -10,5 +10,6 @@ final class Module extends DropwizardAwareModule<TodoConfig> {
         bootstrap();
         configuration();
         bind(DSLContext.class).toProvider(DSLContextProvider.class);
+        bindConstant().annotatedWith(Annotations.AppURL.class).to(configuration().getAppUrl());
     }
 }

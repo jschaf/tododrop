@@ -21,6 +21,15 @@ public final class TodoConfig extends Configuration {
         return schema;
     }
 
+    @JsonProperty
+    private
+    @NotEmpty
+    String appUrl;
+
+    public String getAppUrl() {
+        return appUrl;
+    }
+
     @Valid
     @NotNull
     @JsonProperty("database")

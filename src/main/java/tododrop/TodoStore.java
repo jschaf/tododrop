@@ -2,6 +2,7 @@ package tododrop;
 
 import com.google.common.base.Optional;
 import org.jooq.DSLContext;
+import tododrop.Annotations.AppURL;
 import tododrop.models.tables.pojos.Todo;
 import tododrop.models.tables.records.TodoRecord;
 
@@ -14,10 +15,12 @@ import static tododrop.models.Tables.TODO;
 public class TodoStore {
 
     private final DSLContext db;
+    private final String appUrl;
 
     @Inject
-    public TodoStore(DSLContext db) {
+    public TodoStore(DSLContext db, @AppURL String appUrl) {
         this.db = db;
+        this.appUrl = appUrl;
     }
 
     public List<Todo> getAll() {
@@ -46,10 +49,7 @@ public class TodoStore {
 
         todoRecord.store();
 
-        // build uri
-        // Doesn't have host
-//        final URI uri = UriBuilder.fromResource(TodoResource.class).build(todoRecord.getId());
-        todoRecord.setUrl("http://localhost:8080/" + todoRecord.getId());
+        todoRecord.setUrl(appUrl + todoRecord.getId());
         todoRecord.store();
 
         return todoRecord.into(Todo.class);
