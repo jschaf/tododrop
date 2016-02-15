@@ -304,6 +304,9 @@ task createJavaAppDockerfile(type: Dockerfile) {
     addFile('tododrop.yml', 'tododrop.yml')
     addFile('setup_docker_env.sh', 'setup_docker_env.sh')
     addFile("libs/$APP_JAR", APP_JAR)
+
+    // Dropwizard uses 8080 for normal traffic and 8081 for admin traffic
+    exposePort(8080, 8081)
 //    environmentVariable("JDBC_DATABASE_URL", "DOESNT_WORK")
 //    runCommand("java -jar tododrop-$version-all.jar server tododrop.yml")
 
@@ -345,9 +348,9 @@ task createJavaAppContainer(type: DockerCreateContainer) {
     dependsOn inspectJavaAppImage
     containerName = APP_CONTAINER_NAME
     links = ["$DATABASE_CONTAINER_NAME:db"]
-//    env =["MY_NEW_ENV=YOLO", "DATABASE_USER=\$DB_ENV_DB_USER"]
     cmd = ["/bin/bash", "setup_docker_env.sh"]
-
+    // Map the host port to the Dropwizard exposed ports
+    portBindings = ["8080:8080", "8181:8181"]
     targetImageId { buildJavaAppImage.getImageId() }
 }
 

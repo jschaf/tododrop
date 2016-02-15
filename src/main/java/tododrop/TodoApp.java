@@ -53,6 +53,9 @@ public class TodoApp extends Application<TodoConfig> {
             }
         });
 
+        // Run database migrations on app start.
+        bootstrap.addBundle(new DBMigrationBundle());
+
         // Enable variable substitution with environment variables
         // http://www.dropwizard.io/0.9.2/docs/manual/core.html#environment-variables
         bootstrap.setConfigurationSourceProvider(
