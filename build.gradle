@@ -359,11 +359,8 @@ task createJavaAppContainer(type: DockerCreateContainer) {
 
 task startJavaAppContainer(type: DockerStartContainer) {
     dependsOn createJavaAppContainer
-//    mustRunAfter startPostgresContainer
     targetContainerId { createJavaAppContainer.getContainerId() }
 }
-
-
 
 check.dependsOn integrationTest
 integrationTest.mustRunAfter test
@@ -384,6 +381,10 @@ shadowJar {
     exclude 'META-INF/*.RSA'
 }
 
+// JAR for Tests
+// =============
+//
+// Bundle all tests in a JAR so we can run integration tests inside Docker.
 task packageTests(type: ShadowJar) {
     classifier 'tests'
     from sourceSets.main.output, sourceSets.test.output, sourceSets.integrationTest.output
