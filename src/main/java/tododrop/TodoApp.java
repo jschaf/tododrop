@@ -5,6 +5,8 @@ import com.codahale.metrics.JmxReporter;
 import com.github.rholder.retry.*;
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Application;
+import io.dropwizard.ConfiguredBundle;
+import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.db.DataSourceFactory;
@@ -101,6 +103,7 @@ public class TodoApp extends Application<TodoConfig> {
                 .build());
 
         // HTML
+        bootstrap.addBundle(new AssetsBundle("/assets/", "/", "index.html", "root"));
     }
 
     @Override
@@ -120,6 +123,10 @@ public class TodoApp extends Application<TodoConfig> {
 
         // env.jersey().register(new TodoResource());
         env.jersey().register(new WebExceptionMapper());
+
+        // Move REST api to /api so we can serve assets on /.  See
+        // https://github.com/dropwizard/dropwizard/issues/661
+        env.jersey().setUrlPattern("/api/*");
     }
 
     private static class WebExceptionMapper implements ExceptionMapper<WebApplicationException> {

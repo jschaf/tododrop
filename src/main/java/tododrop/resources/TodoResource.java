@@ -11,7 +11,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/api")
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public final class TodoResource {
 
@@ -31,8 +31,7 @@ public final class TodoResource {
     @Timed
     @POST
     public Todo addTodo(Todo todo) {
-        final Todo save = todoStore.save(todo);
-        return save;
+        return todoStore.save(todo);
     }
 
     @Timed
