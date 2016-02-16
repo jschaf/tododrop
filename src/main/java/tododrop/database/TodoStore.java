@@ -1,8 +1,8 @@
-package tododrop;
+package tododrop.database;
 
 import com.google.common.base.Optional;
 import org.jooq.DSLContext;
-import tododrop.Annotations.AppURL;
+import tododrop.conf.Annotations.AppURL;
 import tododrop.models.tables.pojos.Todo;
 import tododrop.models.tables.records.TodoRecord;
 

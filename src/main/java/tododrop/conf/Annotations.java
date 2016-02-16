@@ -1,4 +1,4 @@
-package tododrop;
+package tododrop.conf;
 
 import com.google.inject.BindingAnnotation;
 

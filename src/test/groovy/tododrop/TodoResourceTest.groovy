@@ -1,10 +1,13 @@
 package tododrop
 
 import io.dropwizard.testing.junit.ResourceTestRule
-import org.glassfish.jersey.client.ClientResponse
+import org.glassfish.jersey.server.model.Resource
 import org.junit.Rule
 import spock.lang.Specification
+import tododrop.database.TodoStore
 import tododrop.models.tables.pojos.Todo
+import tododrop.resources.TodoResource
+
 import javax.ws.rs.core.Response
 
 import static javax.ws.rs.client.Entity.*
@@ -13,11 +16,14 @@ import static javax.ws.rs.core.MediaType.*
 class TodoResourceTest extends Specification {
 
     TodoStore todoStore = Mock(TodoStore)
+    TodoResource todoResource = new TodoResource(todoStore)
+    String uri = Resource.from(todoResource.class).getPath()
 
     @Rule
     ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new TodoResource(todoStore))
+            .addResource(todoResource)
             .build()
+
 
     def setup() {
     }
@@ -27,7 +33,7 @@ class TodoResourceTest extends Specification {
         todoStore.getAll() >> []
 
         when: "we GET root"
-        def result = resources.client().target("/").request().get(List)
+        def result = resources.client().target(uri).request().get(List)
 
         then: "we receive an empty list"
         result == []
@@ -39,7 +45,7 @@ class TodoResourceTest extends Specification {
         todoStore.getAll() >> [todo]
 
         when: "we GET root"
-        List<Todo> result = resources.client().target("/").request().get(List)
+        List<Todo> result = resources.client().target(uri).request().get(List)
 
         then: "we get a list of one todo"
         result.size() == 1
@@ -52,7 +58,7 @@ class TodoResourceTest extends Specification {
         Todo todo = new Todo(1, "title", null, null, null)
 
         when: "we add a Todo"
-        def response = resources.client().target("/")
+        def response = resources.client().target(uri)
                 .request(APPLICATION_JSON_TYPE)
                 .post(entity(todo, APPLICATION_JSON_TYPE))
 

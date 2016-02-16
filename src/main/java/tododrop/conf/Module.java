@@ -1,9 +1,10 @@
-package tododrop;
+package tododrop.conf;
 
 import org.jooq.DSLContext;
 import ru.vyarus.dropwizard.guice.module.support.DropwizardAwareModule;
+import tododrop.TodoConfig;
 
-final class Module extends DropwizardAwareModule<TodoConfig> {
+public final class Module extends DropwizardAwareModule<TodoConfig> {
 
     @Override
     protected void configure() {

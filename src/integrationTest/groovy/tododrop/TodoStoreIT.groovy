@@ -4,6 +4,7 @@ import com.google.common.base.Optional
 import com.google.inject.Inject
 import ru.vyarus.dropwizard.guice.test.spock.UseDropwizardApp
 import spock.lang.Specification
+import tododrop.database.TodoStore
 import tododrop.models.tables.pojos.Todo
 
 

@@ -1,4 +1,4 @@
-package tododrop;
+package tododrop.conf;
 
 import com.bendb.dropwizard.jooq.JooqFactory;
 import com.google.inject.Inject;
@@ -8,6 +8,7 @@ import io.dropwizard.setup.Environment;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
+import tododrop.TodoConfig;
 
 class DSLContextProvider implements Provider<DSLContext> {
 

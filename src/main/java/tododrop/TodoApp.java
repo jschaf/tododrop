@@ -19,6 +19,9 @@ import ru.vyarus.dropwizard.guice.GuiceBundle;
 import ru.vyarus.dropwizard.guice.module.installer.feature.ManagedInstaller;
 import ru.vyarus.dropwizard.guice.module.installer.feature.TaskInstaller;
 import ru.vyarus.dropwizard.guice.module.installer.feature.jersey.ResourceInstaller;
+import tododrop.conf.Module;
+import tododrop.database.DBMigrationBundle;
+import tododrop.resources.TodoResource;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -96,6 +99,8 @@ public class TodoApp extends Application<TodoConfig> {
                 .extensions(TodoResource.class)
                 .modules(new Module())
                 .build());
+
+        // HTML
     }
 
     @Override
