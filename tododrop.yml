@@ -5,6 +5,15 @@ server:
   # http://stackoverflow.com/questions/29848159/dropwizard-0-8-0-serve-static-assets-from
   rootPath: /api/*
 
+  # Port 8080 conflicts with webpack-dev-server.  It's easier to change the port
+  # in Dropwizard.
+  applicationConnectors:
+    - type: http
+      port: 9090
+  adminConnectors:
+    - type: http
+      port: 9091
+
 database:
   driverClass: org.postgresql.Driver
   # The syntax for default values is similar to Bash, e.g
