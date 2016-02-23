@@ -1,18 +1,26 @@
 var path = require('path');
 var webpack = require('webpack');
 
+const PATHS = {
+    app: path.join(__dirname, 'app'),
+    build: path.join(__dirname, 'build')
+}
 
 module.exports = {
-    context: __dirname + "/app",
+    context: PATHS.app,
 
     entry: {
-        javascript: "./app.js",
+        javascript: "./index.tsx",
         html: "./index.html"
     },
 
     output: {
         filename: "bundle.js",
-        path: __dirname + "/dist"
+        path: PATHS.build
+    },
+
+    resolve: {
+        extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
     },
 
     module: {
@@ -26,8 +34,12 @@ module.exports = {
                 }
             },
             {
+                test: /\.tsx?$/,
+                loader: 'babel-loader!ts-loader'
+            },
+            {
                 test: /\.html$/,
-                loader: "file?name=[name].[ext]",
+                loader: "file-loader?name=[name].[ext]"
             }
         ]
     }

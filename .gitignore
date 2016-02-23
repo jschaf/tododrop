@@ -15,3 +15,7 @@
 ## jOOQ generated files
 src/generated/
 build/
+
+
+## TypeScript definitions
+typings/

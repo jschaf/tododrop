@@ -20,7 +20,7 @@ public class TodoStore {
     @Inject
     public TodoStore(DSLContext db, @AppURL String appUrl) {
         this.db = db;
-        this.appUrl = appUrl;
+        this.appUrl = appUrl + "api/";
     }
 
     public List<Todo> getAll() {

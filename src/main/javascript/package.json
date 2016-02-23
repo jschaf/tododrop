@@ -1,0 +1,34 @@
+{
+  "name": "todojs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "start": "webpack-dev-server --content-base build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joe Schafer",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "babel-core": "^6.5.2",
+    "babel-loader": "^6.2.2",
+    "babel-preset-es2015": "^6.5.0",
+    "babel-preset-react": "^6.5.0",
+    "deep-freeze": "0.0.1",
+    "expect": "^1.14.0",
+    "redux": "^3.3.1",
+    "typescript": "next",
+    "webpack": "^1.12.13",
+    "webpack-dev-server": "^1.14.1"
+  },
+  "dependencies": {
+    "es6-promise": "^3.1.2",
+    "isomorphic-fetch": "^2.2.1",
+    "react": "^0.14.7",
+    "react-dom": "^0.14.7",
+    "react-redux": "^4.4.0",
+    "ts-loader": "^0.8.1"
+  }
+}

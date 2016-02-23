@@ -30,4 +30,4 @@ flyway:
   locations:
     - db/migration
 
-appUrl: ${APP_URL:-http://localhost:8080/}
+appUrl: ${APP_URL:-http://localhost:9090/}

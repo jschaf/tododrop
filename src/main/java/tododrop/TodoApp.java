@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 public class TodoApp extends Application<TodoConfig> {
 
 
-
     public static void main(String[] args) throws Exception {
 
 
@@ -96,7 +95,7 @@ public class TodoApp extends Application<TodoConfig> {
 
         // Dependency Injection
         // https://github.com/xvik/dropwizard-guicey
-        bootstrap.addBundle(GuiceBundle.<TodoConfig> builder()
+        bootstrap.addBundle(GuiceBundle.<TodoConfig>builder()
                 .installers(ResourceInstaller.class, TaskInstaller.class, ManagedInstaller.class)
                 .extensions(TodoResource.class)
                 .modules(new Module())
