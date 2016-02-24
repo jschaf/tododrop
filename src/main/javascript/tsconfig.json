@@ -1,11 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "module": "commonjs",
-    "jsx": "react"
+    "jsx": "react",
+    "experimentalDecorators": true
   },
-  "files": [
-    "app/index.tsx",
-    "typings/tsd.d.ts"
-  ]
+  "exclude": ["node_modules", "config", "dev_server.js"]
 }
