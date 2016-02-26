@@ -92,14 +92,14 @@ function setVisibilityFilter(filter: VisibilityStateType): IVisibilityAction {
 
 function todo(state: ITodoState, action: ITodoAction): ITodoState {
     switch (action.type) {
-        case 'ADD_TODO':
+        case 'TODO_ADD':
             return {
                 completed: false,
                 id: action.id,
                 text: action.text,
             };
 
-        case 'TOGGLE_TODO':
+        case 'TODO_TOGGLE':
             if (state.id !== action.id) {
                 return state;
             } else {
@@ -146,9 +146,6 @@ const todoApp: Reducer = combineReducers({
     visibilityFilter,
 });
 
-
-
-
 function getVisibleTodos (todos: ITodoState[],
                           filter: VisibilityStateType): ITodoState[] {
     switch (filter) {
@@ -179,16 +176,16 @@ interface ITodoListProps {
     onTodoClick?: (todoId: number) => ITodoAction;
 }
 
-function TodoList ({todos, onTodoClick}: ITodoListProps): JSX.Element {
+function TodoList ({todos = [], onTodoClick}: ITodoListProps): JSX.Element {
     return (
         <ul>
             {todos.map(todo =>
-            <Todo
-                key={todo.id}
-                {...todo}
-                onClick={() => onTodoClick(todo.id)}
-            />
-                )}
+                <Todo
+                    key={todo.id}
+                    {...todo}
+                    onClick={() => onTodoClick(todo.id)}
+                />
+            )}
         </ul>
     );
 }
@@ -204,8 +201,6 @@ function mapDispatchToTodoListProps(dispatch: Redux.Dispatch): ITodoListProps {
         onTodoClick: (id: number): any => dispatch(toggleTodo(id)),
     };
 }
-
-
 
 const VisibleTodoList: React.StatelessComponent<ITodoListProps> =
     connect(mapStateToTodoListProps, mapDispatchToTodoListProps)(TodoList);

@@ -36,13 +36,13 @@ function setVisibilityFilter(filter) {
 // ========
 function todo(state, action) {
     switch (action.type) {
-        case 'ADD_TODO':
+        case 'TODO_ADD':
             return {
                 completed: false,
                 id: action.id,
                 text: action.text,
             };
-        case 'TOGGLE_TODO':
+        case 'TODO_TOGGLE':
             if (state.id !== action.id) {
                 return state;
             }
@@ -94,7 +94,7 @@ function getVisibleTodos(todos, filter) {
 function Todo({ onClick, completed, text }) {
     return (React.createElement("li", {onClick: onClick, style: { textDecoration: completed ? 'line-through' : 'none' }}, text));
 }
-function TodoList({ todos, onTodoClick }) {
+function TodoList({ todos = [], onTodoClick }) {
     return (React.createElement("ul", null, todos.map(todo => React.createElement(Todo, React.__spread({key: todo.id}, todo, {onClick: () => onTodoClick(todo.id)})))));
 }
 function mapStateToTodoListProps(state) {
