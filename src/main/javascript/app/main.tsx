@@ -1,7 +1,17 @@
+import { addTodo, toggleTodo, setVisibilityFilter } from './actions'
+import {ITodoState, VisibilityStateType, ITodoAction, IVisibilityAction} from './types';
+
+
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { Provider, connect } from 'react-redux';
-import fetch from 'isomorphic-fetch';
+import * as _ from 'lodash';
+
+interface IAppState {
+    todos: ITodoState[];
+    visibilityFilter: VisibilityStateType;
+}
+
 
 import Reducer = Redux.Reducer;
 
@@ -16,38 +26,6 @@ const SERVER_URL: string = 'http://localhost:9090/api/';
 //        throw error;
 //    }
 // }
-
-type TodoActionVerb = "TODO_ADD" | "TODO_TOGGLE";
-
-
-interface ITodoAction {
-    type: TodoActionVerb;
-    id?: number;
-    text?: string;
-    filter?: string;
-    completed?: boolean;
-}
-
-interface ITodoState {
-    id?: number;
-    text?: string;
-    completed?: boolean;
-}
-
-
-type VisibilityActionVerb = "VISIBILITY_FILTER_SET" ;
-
-type VisibilityStateType = "SHOW_ALL" | "SHOW_COMPLETED" | "SHOW_ACTIVE";
-
-interface IVisibilityAction {
-    type: VisibilityActionVerb;
-    filter: VisibilityStateType;
-}
-
-interface IAppState {
-    todos: ITodoState[];
-    visibilityFilter: VisibilityStateType;
-}
 
 // Action Creators
 // ===============
@@ -69,22 +47,6 @@ interface IAppState {
 // }
 
 
-let nextTodoId: number = 0;
-function addTodo(text: string): ITodoAction {
-    return {id: nextTodoId++, type: 'TODO_ADD',  text};
-}
-
-function toggleTodo(id: number): ITodoAction {
-    return {type: 'TODO_TOGGLE', id};
-}
-
-function setVisibilityFilter(filter: VisibilityStateType): IVisibilityAction {
-    return {
-        filter: filter,
-        type: 'VISIBILITY_FILTER_SET',
-    };
-}
-
 
 
 // Reducers
@@ -103,7 +65,7 @@ function todo(state: ITodoState, action: ITodoAction): ITodoState {
             if (state.id !== action.id) {
                 return state;
             } else {
-                return Object.assign(
+                return _.assign(
                     {}, state, {completed: !state.completed}
                 );
             }

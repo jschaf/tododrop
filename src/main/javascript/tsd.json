@@ -11,14 +11,14 @@
     "react/react-dom.d.ts": {
       "commit": "bd269cad4cb2b495f940c7b6afc5825d568029be"
     },
-    "isomorphic-fetch/isomorphic-fetch.d.ts": {
-      "commit": "bd269cad4cb2b495f940c7b6afc5825d568029be"
-    },
     "react-redux/react-redux.d.ts": {
       "commit": "bd269cad4cb2b495f940c7b6afc5825d568029be"
     },
     "redux/redux.d.ts": {
       "commit": "bd269cad4cb2b495f940c7b6afc5825d568029be"
+    },
+    "lodash/lodash.d.ts": {
+      "commit": "4ba57e605bd71bf7248de65aac0b4f50e3eb1c9e"
     }
   }
 }
