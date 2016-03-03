@@ -1,4 +1,4 @@
-import { addTodo, toggleTodo, setVisibilityFilter } from './actions'
+import { addTodo, toggleTodo, setVisibilityFilter, receiveTodos, fetchTodos } from './actions'
 import {ITodoState, VisibilityStateType, ITodoAction, IVisibilityAction} from './types';
 
 
@@ -15,7 +15,6 @@ interface IAppState {
 
 import Reducer = Redux.Reducer;
 
-const SERVER_URL: string = 'http://localhost:9090/api/';
 
 // function checkStatus(response) {
 //    if (response.status >= 200 && response.status < 300) {
@@ -30,22 +29,6 @@ const SERVER_URL: string = 'http://localhost:9090/api/';
 // Action Creators
 // ===============
 
-// export const RECEIVE_TODOS: string = 'RECEIVE_TODOS';
-//
-// function receiveTodos(json: string): ITodoAction {
-//     return {
-//         type: RECEIVE_TODOS,
-//     };
-// };
-//
-// function fetchTodos() {
-//     return (dispatch) => {
-//         return fetch(SERVER_URL)
-//             .then(req => req.json)
-//             .then(json => dispatch(receiveTodos))
-//    };
-// }
-
 
 
 
@@ -58,7 +41,7 @@ function todo(state: ITodoState, action: ITodoAction): ITodoState {
             return {
                 completed: false,
                 id: action.id,
-                text: action.text,
+                title: action.title,
             };
 
         case 'TODO_TOGGLE':
@@ -85,6 +68,8 @@ function todos(state: ITodoState[] = [], action: ITodoAction): ITodoState[] {
             ];
         case 'TODO_TOGGLE':
             return state.map(t => todo(t, action));
+        case 'TODO_RECEIVE':
+            return action.todos;
         default:
             return state;
     }
@@ -122,13 +107,13 @@ function getVisibleTodos (todos: ITodoState[],
     }
 }
 
-function Todo({onClick, completed, text}: {onClick: () => void, completed: boolean, text: string}): JSX.Element {
+function Todo({onClick, completed, title}: {onClick: () => void, completed: boolean, title: string}): JSX.Element {
     return (
         <li
             onClick={onClick}
             style={{ textDecoration: completed ? 'line-through' : 'none' }}
         >
-            {text}
+            {title}
         </li>
     );
 }
@@ -219,12 +204,32 @@ function mapDispatchToLinkProps (dispatch: Redux.Dispatch, ownProps: ILinkProps)
 const FilterLink: React.StatelessComponent<ILinkProps> =
     connect(mapStateToLinkProps, mapDispatchToLinkProps)(Link);
 
+function FetchTodosLink({onClick, children}): JSX.Element {
+    return (
+        <a href="#" onClick={onClick}>{children}</a>
+    );
+}
+
+function mapStateToFetchTodosProps(state: IAppState) {
+    return {};
+}
+
+function mapDispatchToFetchTodosProps(dispatch: Redux.Dispatch) {
+    return {
+        onClick: (): any => fetchTodos(dispatch)
+    }
+}
+
+const FetchLink: React.StatelessComponent<any> = connect(mapStateToFetchTodosProps,
+    mapDispatchToFetchTodosProps)(FetchTodosLink);
+
 function Footer(): JSX.Element {
     return (
         <p>Show:
         {' '} <FilterLink filter='SHOW_ALL'>All</FilterLink>
             {' '} <FilterLink filter='SHOW_ACTIVE'>Active</FilterLink>
             {' '} <FilterLink filter='SHOW_COMPLETED'>Completed</FilterLink>
+            {' '} <FetchLink>Fetch Todos</FetchLink>
         </p>
     );
 }

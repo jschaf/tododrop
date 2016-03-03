@@ -1,10 +1,14 @@
-export type TodoActionVerb = "TODO_ADD" | "TODO_TOGGLE";
+export type TodoActionVerb = "TODO_ADD"
+    | "TODO_TOGGLE"
+    | "TODO_RECEIVE"
+    ;
 
 export interface ITodoAction {
     type: TodoActionVerb;
+    todos?: ITodoState[];
     id?: number;
-    text?: string;
     filter?: string;
+    title?: string;
     completed?: boolean;
 }
 
@@ -20,7 +24,9 @@ export interface IVisibilityAction {
 
 export interface ITodoState {
     id?: number;
-    text?: string;
+    title?: string;
     completed?: boolean;
+    order?: number;
+    url?: string;
 }
 

@@ -41,7 +41,7 @@ var DEFAULT_PARAMS = {
     ],
     devServer: {
         contentBase: 'dev/',
-        port: 9090
+        port: 9092
     },
     debug: true,
     progress: true,
@@ -56,7 +56,7 @@ var PARAMS_PER_TARGET = {
             filename: '[name].js'
         },
         plugins: [
-            new OpenBrowserWebpackPlugin({ url: 'http://localhost:9090/' })
+            new OpenBrowserWebpackPlugin({ url: 'http://localhost:9092/' })
         ]
     },
 

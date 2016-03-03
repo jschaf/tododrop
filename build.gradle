@@ -92,7 +92,7 @@ dependencies {
     checker 'org.checkerframework:jdk8:1.9.11'
 
     compile (
-            'com.bendb.dropwizard:dropwizard-jooq:0.9.1-1-SNAPSHOT',
+            'com.bendb.dropwizard:dropwizard-jooq:0.9.1-1',
             "com.github.rholder:guava-retrying:2.0.0",
             'com.google.guava:guava:19.0',
             "io.dropwizard:dropwizard-assets:$dropwizardVersion",
